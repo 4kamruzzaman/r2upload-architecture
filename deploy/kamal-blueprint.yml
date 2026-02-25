@@ -1,0 +1,41 @@
+service: r2upload-api
+image: bizsafer/r2upload-api
+
+servers:
+  web:
+    hosts:
+      - PRODUCTION_IP_ADDRESS
+    options:
+      memory: 512m
+
+deploy_timeout: 180
+drain_timeout: 30
+
+proxy:
+  hosts:
+    - api.r2upload.io
+  ssl: true
+  app_port: 80
+  healthcheck:
+    path: /health
+    interval: 3
+    timeout: 3
+
+registry:
+  server: ghcr.io
+  username:
+    - KAMAL_REGISTRY_USERNAME
+  password:
+    - KAMAL_REGISTRY_PASSWORD
+
+env:
+  clear:
+    APP_ENV: production
+    APP_DEBUG: "false"
+    DB_CONNECTION: pgsql
+    CACHE_STORE: redis
+    QUEUE_CONNECTION: redis
+  secret:
+    - APP_KEY
+    - DB_PASSWORD
+    - STRIPE_SECRET
