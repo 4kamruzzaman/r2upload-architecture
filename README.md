@@ -10,6 +10,34 @@ R2Upload is a secure enterprise file management and cloud storage platform. This
 
 The environment is strictly Production-First. It bridges a high-performance decoupled application core with industrial-grade reliability. 
 
+## Infrastructure Topology
+
+```mermaid
+graph TD
+    Client[Global Enterprise Users] -->|HTTPS| CF[Cloudflare Edge: WAF & CDN]
+    
+    subgraph BizSafer Global Server [Zero-Downtime Infrastructure]
+        CF --> Proxy[Kamal Proxy]
+        
+        subgraph Frontend Node
+            Proxy --> Web[Next.js 16 Container]
+        end
+        
+        subgraph API Core
+            Proxy --> API[Laravel 12 Container]
+            API --> Worker[Redis Queue Worker]
+            Worker --> Jobs[Background Jobs & Webhooks]
+        end
+        
+        subgraph Stateful Layer
+            API --> DB[(PostgreSQL 16)]
+            API --> Cache[(Redis 8)]
+        end
+    end
+    
+    API --> S3[S3-Compatible Storage Nodes]
+```
+
 ## Locked SRE Metrics
 * **Uptime Target:** >99.9% via a zero single point of failure container-native architecture.
 * **Global Latency:** Sub-200ms latency enforced by edge computing and optimized database indexing.
