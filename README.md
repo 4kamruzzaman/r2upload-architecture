@@ -14,28 +14,41 @@ The environment is strictly Production-First. It bridges a high-performance deco
 
 ```mermaid
 graph TD
-    Client[Global Enterprise Users] -->|HTTPS| CF[Cloudflare Edge: WAF & CDN]
+    Client([Enterprise API Consumers]) -->|HTTPS / WSS| CF[Cloudflare WAF & CDN Edge]
     
-    subgraph BizSafer Global Server [Zero-Downtime Infrastructure]
-        CF --> Proxy[Kamal Proxy]
+    subgraph Zero-Downtime Orchestration
+        CF -->|Validated Traffic| Proxy[Kamal Proxy]
         
-        subgraph Frontend Node
-            Proxy --> Web[Next.js 16 Container]
+        subgraph Edge Delivery Nodes
+            Proxy -->|Dashboard Routes| NextJS[Next.js 16 Standalone]
         end
         
-        subgraph API Core
-            Proxy --> API[Laravel 12 Container]
-            API --> Worker[Redis Queue Worker]
-            Worker --> Jobs[Background Jobs & Webhooks]
+        subgraph API & Core Processing
+            Proxy -->|API Validation| Laravel[Laravel 12 API Core]
+            Laravel -->|Dispatches Async Jobs| Worker[Redis Queue Workers]
+            Worker -.->|Fires Webhook Events| Client
         end
         
-        subgraph Stateful Layer
-            API --> DB[(PostgreSQL 16)]
-            API --> Cache[(Redis 8)]
+        subgraph Stateful Persistence Layer
+            Laravel -->|Tenant & Billing Data| PG[(PostgreSQL 16)]
+            Laravel -->|High-Concurrency Queue| Redis[(Redis 8)]
+            Worker -->|Job State| Redis
+            Laravel -->|Direct Payload Stream| S3[(Isolated S3-Compatible Nodes)]
+            Worker -->|Async Remote Uploads| S3
         end
     end
     
-    API --> S3[S3-Compatible Storage Nodes]
+    classDef proxy fill:#2563eb,stroke:#fff,stroke-width:2px,color:#fff
+    classDef edge fill:#f59e0b,stroke:#fff,stroke-width:2px,color:#fff
+    classDef core fill:#dc2626,stroke:#fff,stroke-width:2px,color:#fff
+    classDef data fill:#059669,stroke:#fff,stroke-width:2px,color:#fff
+    classDef external fill:#4b5563,stroke:#fff,stroke-width:2px,color:#fff
+    
+    class Proxy proxy
+    class NextJS edge
+    class Laravel,Worker core
+    class PG,Redis,S3 data
+    class Client external
 ```
 
 ## Locked SRE Metrics
