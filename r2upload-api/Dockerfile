@@ -1,28 +1,40 @@
 # Reference Architecture: R2Upload API Core
-FROM php:8.4-fpm-alpine
+FROM composer:2.8 AS composer
+WORKDIR /app
+COPY composer.json composer.lock ./
+RUN composer install --no-dev --no-scripts --no-autoloader --prefer-dist --ignore-platform-reqs
+COPY . .
+RUN composer dump-autoload --optimize --classmap-authoritative
 
+FROM php:8.4-fpm-alpine AS production
 RUN apk add --no-cache \
+    nginx \
+    supervisor \
+    curl \
     postgresql-dev \
     libzip-dev \
-    unzip \
-    && docker-php-ext-install pdo pdo_pgsql zip opcache pcntl
+    && docker-php-ext-install pdo_pgsql zip opcache pcntl
 
-RUN apk add --no-cache pcre-dev $PHPIZE_DEPS \
+RUN apk add --no-cache --virtual .phpize-deps $PHPIZE_DEPS \
     && pecl install redis \
     && docker-php-ext-enable redis \
-    && apk del $PHPIZE_DEPS
+    && apk del .phpize-deps
+
+COPY docker/nginx.conf /etc/nginx/nginx.conf
+COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
 
 WORKDIR /var/www/html
+COPY --from=composer /app/vendor ./vendor
 COPY . .
 
-COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
-RUN composer install --no-dev --optimize-autoloader --no-interaction
+RUN chown -R www-data:www-data /var/www/html \
+    && chmod -R 755 /var/www/html/storage
 
-RUN chown -R www-data:www-data /var/www/html/storage
+HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
+    CMD curl -f http://localhost/health || exit 1
 
-RUN php artisan config:cache \
-    && php artisan route:cache \
-    && php artisan event:cache
-
-EXPOSE 9000
-CMD ["php-fpm"]
+EXPOSE 80
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
