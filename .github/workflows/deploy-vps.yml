@@ -1,0 +1,44 @@
+name: Enterprise Production Deploy
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout Codebase
+        uses: actions/checkout@v4
+
+      - name: Set up Ruby Environment
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: 3.3
+          bundler-cache: true
+
+      - name: Install Kamal Orchestrator
+        run: gem install kamal
+
+      - name: Configure Production SSH Key
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.VPS_SSH_KEY }}
+
+      - name: Execute API Core Deployment
+        env:
+          KAMAL_REGISTRY_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          kamal lock release -c config/deploy.yml || true
+          kamal deploy -c config/deploy.yml
+
+      - name: Execute Edge Node Deployment
+        env:
+          KAMAL_REGISTRY_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          kamal lock release -c config/deploy.web.yml || true
+          kamal deploy -c config/deploy.web.yml
