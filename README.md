@@ -1,7 +1,7 @@
 # R2Upload SaaS Infrastructure Architecture
 
 **Lead Architect:** [Md. Kamruzzaman](https://www.linkedin.com/in/4kamruzzaman/)  
-**Engineering Lab:** [BizSafer](https://bizsafer.com)  
+**Engineering Lab:** [BizSafer](https://www.bizsafer.com)  
 **Live Production:** [https://r2upload.io](https://r2upload.io)  
 **Enterprise Inquiries:** kamruzzaman@bizsafer.com
 
