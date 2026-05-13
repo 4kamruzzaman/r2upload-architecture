@@ -1,0 +1,43 @@
+# Reference Architecture: R2Upload API Core & Workers
+service: r2upload-api
+image: ghcr.io/bizsafer-lab/r2upload-api-reference
+
+servers:
+  web:
+    hosts:
+      - <api-node-ip-1>
+      - <api-node-ip-2>
+      - <api-node-ip-3>
+      - <api-node-ip-4>
+    labels:
+      kamal-proxy.route: "/"
+      kamal-proxy.healthcheck.path: "/api/health"
+      kamal-proxy.healthcheck.interval: "5s"
+  
+  worker:
+    hosts:
+      - <worker-node-ip-1>
+      - <worker-node-ip-2>
+      - <worker-node-ip-3>
+      - <worker-node-ip-4>
+    cmd: php artisan queue:work redis --sleep=3 --tries=3 --max-time=3600
+    labels:
+      kamal-proxy.route: "none" # Workers do not receive HTTP traffic
+
+registry:
+  server: ghcr.io
+  username: bizsafer-deploy
+  password:
+    - KAMAL_REGISTRY_PASSWORD
+
+env:
+  clear:
+    PHP_OPCACHE_ENABLE: "1"
+    APP_ENV: "production"
+    QUEUE_CONNECTION: "redis"
+  secret:
+    - APP_KEY
+    - DATABASE_URL
+    - REDIS_URL
+    - AWS_ACCESS_KEY_ID
+    - STRIPE_SECRET_KEY
