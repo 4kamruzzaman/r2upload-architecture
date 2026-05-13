@@ -1,0 +1,28 @@
+name: Clean Stale GHCR Images
+
+on:
+  schedule:
+    - cron: '0 0 * * 0' # Executes every Sunday at midnight
+  workflow_dispatch:
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Purge Legacy API Images
+        uses: snok/container-retention-policy@v2
+        with:
+          image-names: bizsafer-lab/r2upload-api-reference
+          cut-off: 2 weeks ago
+          keep-at-least: 5
+          account-type: personal
+          token: ${{ secrets.PAT_CLEANUP }}
+
+      - name: Purge Legacy Web Images
+        uses: snok/container-retention-policy@v2
+        with:
+          image-names: bizsafer-lab/r2upload-web-reference
+          cut-off: 2 weeks ago
+          keep-at-least: 5
+          account-type: personal
+          token: ${{ secrets.PAT_CLEANUP }}
