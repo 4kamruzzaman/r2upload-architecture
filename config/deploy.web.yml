@@ -1,0 +1,28 @@
+# Reference Architecture: R2Upload Frontend Edge Nodes
+service: r2upload-web
+image: ghcr.io/bizsafer-lab/r2upload-web-reference
+
+servers:
+  web:
+    hosts:
+      - <edge-node-ip-1>
+      - <edge-node-ip-2>
+      - <edge-node-ip-3>
+      - <edge-node-ip-4>
+    labels:
+      kamal-proxy.route: "/"
+      kamal-proxy.healthcheck.path: "/"
+      kamal-proxy.healthcheck.interval: "5s"
+
+registry:
+  server: ghcr.io
+  username: bizsafer-deploy
+  password:
+    - KAMAL_REGISTRY_PASSWORD
+
+env:
+  clear:
+    NODE_ENV: "production"
+    NEXT_TELEMETRY_DISABLED: "1"
+  secret:
+    - NEXT_PUBLIC_API_URL
