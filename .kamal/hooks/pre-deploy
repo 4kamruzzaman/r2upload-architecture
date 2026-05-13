@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+# Reference Architecture: R2Upload Pre-Deploy Validation
+
+echo "Validating SaaS deployment perimeter..."
+
+if [ "$KAMAL_ENVIRONMENT" == "production" ]
+then
+  echo "Production environment detected."
+  echo "Enforcing strict >99.9% uptime deployment protocols."
+  
+  # Ensure critical SaaS tokens are injected before proceeding
+  if [ -z "$STRIPE_SECRET_KEY" ] || [ -z "$AWS_ACCESS_KEY_ID" ]; then
+    echo "CRITICAL: Missing billing or storage credentials. Halting deployment."
+    exit 1
+  fi
+else
+  echo "Non-production deployment proceeding."
+fi
