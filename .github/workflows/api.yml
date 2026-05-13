@@ -1,0 +1,42 @@
+name: API Core CI
+
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - 'api/**'
+  pull_request:
+    branches: [ "main" ]
+    paths:
+      - 'api/**'
+
+jobs:
+  test-and-analyze:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./api
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP 8.4
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, bcmath, soap, intl, gd, exif, iconv, imagick, fileinfo
+          coverage: none
+
+      - name: Resolve Enterprise Dependencies
+        run: composer install -q --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist
+
+      - name: Enforce Strict Static Analysis (PHPStan)
+        run: ./vendor/bin/phpstan analyse --memory-limit=2G
+
+      - name: Execute Unit and Feature Tests
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: ":memory:"
+          CACHE_STORE: array
+          QUEUE_CONNECTION: sync
+        run: php artisan test
