@@ -23,18 +23,18 @@ graph TD
             Proxy -->|Dashboard Routes| NextJS[Next.js 16 Standalone]
         end
         
-        subgraph API & Core Processing
-            Proxy -->|API Validation| Laravel[Laravel 12 API Core]
-            Laravel -->|Dispatches Async Jobs| Worker[Redis Queue Workers]
+        subgraph Unified Application Core
+            Proxy -->|API Traffic| Laravel[Laravel 12 API & Nginx]
+            Laravel -->|Supervisord Managed| Worker[Internal Queue Workers]
             Worker -.->|Fires Webhook Events| Client
         end
         
         subgraph Stateful Persistence Layer
             Laravel -->|Tenant & Billing Data| PG[(PostgreSQL 16)]
-            Laravel -->|High-Concurrency Queue| Redis[(Redis 8)]
+            Laravel -->|High-Concurrency Queue| Redis[(Redis 8 Accessory)]
             Worker -->|Job State| Redis
-            Laravel -->|Direct Payload Stream| S3[(Isolated S3-Compatible Nodes)]
-            Worker -->|Async Remote Uploads| S3
+            Laravel -->|Direct Payload Stream| R2[(Cloudflare R2 Storage Vaults)]
+            Worker -->|Async Remote Uploads| R2
         end
     end
     
@@ -47,7 +47,7 @@ graph TD
     class Proxy proxy
     class NextJS edge
     class Laravel,Worker core
-    class PG,Redis,S3 data
+    class PG,Redis,R2 data
     class Client external
 ```
 
