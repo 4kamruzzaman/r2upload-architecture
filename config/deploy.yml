@@ -1,43 +1,73 @@
-# Reference Architecture: R2Upload API Core & Workers
+# Reference Architecture: R2Upload API Core
 service: r2upload-api
 image: ghcr.io/bizsafer-lab/r2upload-api-reference
 
+# ── Zero-Downtime Servers ────────────────────────────────────────────────────
 servers:
   web:
     hosts:
-      - <api-node-ip-1>
-      - <api-node-ip-2>
-      - <api-node-ip-3>
-      - <api-node-ip-4>
+      - <production-node-ip>
+      - <production-node-ip>
+      - <production-node-ip>
+      - <production-node-ip>
+    options:
+      memory: 1024m
     labels:
       kamal-proxy.route: "/"
-      kamal-proxy.healthcheck.path: "/api/health"
-      kamal-proxy.healthcheck.interval: "5s"
-  
-  worker:
-    hosts:
-      - <worker-node-ip-1>
-      - <worker-node-ip-2>
-      - <worker-node-ip-3>
-      - <worker-node-ip-4>
-    cmd: php artisan queue:work redis --sleep=3 --tries=3 --max-time=3600
-    labels:
-      kamal-proxy.route: "none" # Workers do not receive HTTP traffic
+      kamal-proxy.healthcheck.path: "/health"
+      kamal-proxy.healthcheck.interval: "3s"
 
+# ── Immutable Registry ──────────────────────────────────────────────────────
 registry:
   server: ghcr.io
-  username: bizsafer-deploy
+  username:
+    - KAMAL_REGISTRY_USERNAME
   password:
     - KAMAL_REGISTRY_PASSWORD
 
+# ── Strict Secret Injection ──────────────────────────────────────────────────
 env:
   clear:
-    PHP_OPCACHE_ENABLE: "1"
+    APP_NAME: "R2 Upload Service"
     APP_ENV: "production"
+    APP_DEBUG: "false"
+    APP_URL: "https://api.r2upload.io"
+    FRONTEND_URL: "https://r2upload.io"
+    DB_CONNECTION: "pgsql"
+    CACHE_STORE: "redis"
     QUEUE_CONNECTION: "redis"
+    SESSION_DRIVER: "redis"
+    REDIS_HOST: "r2upload-api-redis"
+    FILESYSTEM_DISK: "r2"
   secret:
     - APP_KEY
-    - DATABASE_URL
-    - REDIS_URL
-    - AWS_ACCESS_KEY_ID
-    - STRIPE_SECRET_KEY
+    - DB_HOST
+    - DB_DATABASE
+    - DB_USERNAME
+    - DB_PASSWORD
+    - REDIS_PASSWORD
+    - R2_ENDPOINT
+    - R2_BUCKET
+    - R2_REGION
+    - R2_ACCESS_KEY
+    - R2_SECRET_KEY
+    - R2_CUSTOM_DOMAIN
+    - STRIPE_KEY
+    - STRIPE_SECRET
+    - STRIPE_WEBHOOK_SECRET
+    - SENTRY_LARAVEL_DSN
+
+# ── Stateful Accessories ─────────────────────────────────────────────────────
+accessories:
+  redis:
+    image: redis:8-alpine
+    host: <production-node-ip>
+    port: "127.0.0.1:6379:6379"
+    cmd: "sh -c 'redis-server --appendonly yes --requirepass ${REDIS_PASSWORD} --maxmemory 512mb --maxmemory-policy allkeys-lru'"
+    env:
+      secret:
+        - REDIS_PASSWORD
+    directories:
+      - data:/data
+    options:
+      memory: 512m
