@@ -1,28 +1,35 @@
-# Reference Architecture: R2Upload Frontend Edge Nodes
+# Reference Architecture: Web Destination (Next.js Frontend)
 service: r2upload-web
-image: ghcr.io/bizsafer-lab/r2upload-web-reference
+image: bizsafer/r2upload-web-reference
 
 servers:
   web:
     hosts:
-      - <edge-node-ip-1>
-      - <edge-node-ip-2>
-      - <edge-node-ip-3>
-      - <edge-node-ip-4>
-    labels:
-      kamal-proxy.route: "/"
-      kamal-proxy.healthcheck.path: "/"
-      kamal-proxy.healthcheck.interval: "5s"
+      - <production-node-ip>
+      - <production-node-ip>
+      - <production-node-ip>
+      - <production-node-ip>
 
-registry:
-  server: ghcr.io
-  username: bizsafer-deploy
-  password:
-    - KAMAL_REGISTRY_PASSWORD
+deploy_timeout: 120
+drain_timeout: 15
+
+proxy:
+  hosts:
+    - r2upload.io
+    - www.r2upload.io
+  ssl: true
+  app_port: 3000
+  healthcheck:
+    path: /
+    interval: 3
+    timeout: 3
 
 env:
   clear:
-    NODE_ENV: "production"
+    NODE_ENV: production
+    PORT: "3000"
+    HOSTNAME: "0.0.0.0"
+    NEXT_PUBLIC_API_URL: https://api.r2upload.io
+    NEXT_PUBLIC_APP_URL: https://r2upload.io
     NEXT_TELEMETRY_DISABLED: "1"
-  secret:
-    - NEXT_PUBLIC_API_URL
+  secret: []
