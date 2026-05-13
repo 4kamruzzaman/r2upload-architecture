@@ -23,13 +23,14 @@ The system operates on a fully decoupled micro-architecture.
 * **API Core:** Laravel 12 API handling rate limiting, Stripe billing, and asynchronous webhook dispatching.
 * **Stateful Persistence:** PostgreSQL 16 for relational data and multi-tenant resource quotas.
 * **High-Concurrency Queue:** Redis 8 managing background job processing and caching layers.
+* **External Storage:** S3-Compatible Storage nodes strictly isolated for enterprise payload persistence.
 
 ## Deployment & Orchestration
 The deployment pipeline is fully automated to guarantee zero-downtime rollouts.
 
 * **Containerization:** 100% Dockerized environments isolating the Next.js frontend, Laravel API, PostgreSQL, and Redis instances.
 * **Continuous Integration:** GitHub Actions pipelines handle automated testing, static analysis via PHPStan, and pushing immutable images to GitHub Container Registry.
-* **Continuous Delivery:** Kamal 2 orchestration proxies traffic, manages rolling updates, and instantly rolls back unhealthy deployments.
+* **Continuous Delivery:** Kamal 2 orchestration utilizing kamal-proxy to execute atomic traffic swapping, manage zero-downtime rolling updates, and instantly roll back unhealthy deployments.
 
 ## Security Posture
 * Multi-layer defense-in-depth utilizing Cloudflare WAF to block malicious payloads at the edge.
