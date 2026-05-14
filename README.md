@@ -50,6 +50,16 @@ graph TD
     class PG,Redis,R2 data
     class Client external
 ```
+## Repository Architecture (V2 Enterprise Refactor)
+
+This repository contains the sanitized reference blueprints for the R2Upload SaaS infrastructure. We use these specific configurations to enforce strict GitOps immutability and multi-node orchestration.
+
+* **.github/workflows/**: We use these pipelines to completely eliminate manual server interventions. It contains the exact Continuous Integration gates and Continuous Deployment actions required to execute atomic traffic swapping and optimize registry storage.
+* **.kamal/**: We use these lifecycle hooks to execute pre-flight billing validation and dispatch automated post-deployment telemetry. It also houses the strict zero-trust secret templates required to map Cloudflare R2 tokens into the orchestrator.
+* **r2upload-api/**: We use this isolated environment to compile the PHP 8.4 and Laravel 12 core. The reference `Dockerfile` proves our usage of Supervisord to natively manage internal Redis queue workers and Nginx within a single unified container boundary.
+* **config/**: We use these orchestration files (`deploy.yml` and `deploy.web.yml`) to govern our Kamal 2 traffic proxy. They prove our specific FinOps routing to Cloudflare R2 storage vaults and our zero-downtime health check parameters.
+* **r2upload-web/**: We use this boundary to containerize the Next.js 16 edge nodes. The multi-stage `Dockerfile` proves our strict standalone extraction methodology engineered to guarantee sub-200ms global latency.
+* **docker-compose.yml**: We use this localized configuration to guarantee 100% stateful parity between a developer's local machine and the live production database cluster without relying on heavy cloud simulations.
 
 ## Locked SRE Metrics
 * **Uptime Target:** >99.9% via a zero single point of failure container-native architecture.
