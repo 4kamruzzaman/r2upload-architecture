@@ -61,7 +61,7 @@ This repository contains the sanitized reference blueprints for the R2Upload Saa
 * **r2upload-web/**: We use this boundary to containerize the Next.js 16 edge nodes. The multi-stage `Dockerfile` proves our strict standalone extraction methodology engineered to guarantee sub-200ms global latency.
 * **docker-compose.yml**: We use this localized configuration to guarantee 100% stateful parity between a developer's local machine and the live production database cluster without relying on heavy cloud simulations.
 
-## Locked SRE Metrics
+## Locked Performance Baselines
 * **Uptime Target:** >99.9% via a zero single point of failure container-native architecture.
 * **Global Latency:** Sub-200ms latency enforced by edge computing and optimized database indexing.
 * **MTTR:** <60s via automated self-healing rollouts and strict continuous delivery pipelines.
